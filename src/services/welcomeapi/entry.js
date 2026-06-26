@@ -40,6 +40,17 @@ async function welcomeapi(req, res) {
         
         const history = Array.isArray(transaction_history) ? transaction_history : [];
 
+        const validinput={
+            ticket_id,
+            complaint,
+            language,
+            channel,
+            user_type,
+            campaign_context,
+            transaction_history: history,
+            metadata
+        }
+
         // --- VALIDATION PASSED ---
         // const investigationResult = await investigator.investigate({
         //     ticket_id,
@@ -54,7 +65,7 @@ async function welcomeapi(req, res) {
 
         //return res.status(200).json(investigationResult);
 
-        const result = await geminiCall.callGeminiInvestigator(req.body);
+        const result = await geminiCall.callGeminiInvestigator(validinput);
         
         // Send successful Gemini outcome
         return res.status(200).json(result);
