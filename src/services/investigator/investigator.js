@@ -1,8 +1,12 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const {
+    analyzeWithLLM
+} = require("../../utils/llmAnalyzer");
 
 const moduleCache = new Map();
+const LLM_FALLBACK_THRESHOLD = 0.5;
 
 const normalize = (value = "") => {
     return value
@@ -615,6 +619,67 @@ const sanitizeConfidence = (
     );
 };
 
+const buildLlmPayload = (
+    input = {},
+    transactionHistory = []
+) => {
+    return {
+        ticket_id: input.ticket_id,
+        complaint: input.complaint,
+        language: input.language,
+        channel: input.channel,
+        user_type: input.user_type,
+        campaign_context:
+            input.campaign_context,
+        transaction_history:
+            transactionHistory,
+        metadata: input.metadata
+    };
+};
+
+const shouldUseLlmFallback = (
+    response = {}
+) => {
+    return Number(response.confidence) <
+        LLM_FALLBACK_THRESHOLD;
+};
+
+const tryLlmFallback = async (
+    input = {},
+    transactionHistory = [],
+    ruleBasedResponse = {}
+) => {
+    if (
+        !shouldUseLlmFallback(
+            ruleBasedResponse
+        )
+    ) {
+        return ruleBasedResponse;
+    }
+
+    try {
+        const llmResponse =
+            await analyzeWithLLM(
+                buildLlmPayload(
+                    input,
+                    transactionHistory
+                )
+            );
+
+        return {
+            ...llmResponse,
+            ticket_id: input.ticket_id
+        };
+    } catch (error) {
+        console.error(
+            "LLM fallback failed:",
+            error.message
+        );
+
+        return ruleBasedResponse;
+    }
+};
+
 const investigate = async (
     input = {}
 ) => {
@@ -711,7 +776,7 @@ const investigate = async (
             parsedComplaint
         );
 
-    const response = {
+    const ruleBasedResponse = {
         ticket_id: input.ticket_id,
         relevant_transaction_id:
             evidenceResult.relevantTransactionId ??
@@ -752,7 +817,11 @@ const investigate = async (
             reasonCodesResult.reasonCodes
     };
 
-    return response;
+    return tryLlmFallback(
+        input,
+        transactionHistory,
+        ruleBasedResponse
+    );
 };
 
 module.exports = {
