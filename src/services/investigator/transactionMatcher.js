@@ -9,6 +9,8 @@ const MATCH_WEIGHTS = {
     time: 15
 };
 
+const MINIMUM_MATCH_SCORE = 20;
+
 // Normalize string values
 
 const normalize = (value = "") => {
@@ -91,7 +93,9 @@ const getHourFromTimestamp = (timestamp) => {
         return null;
     }
 
-    return date.getHours();
+    // Input timestamps are ISO-8601 and sample data uses `Z`, so
+    // UTC keeps matching stable across judge/server timezones.
+    return date.getUTCHours();
 };
 
 // Convert complaint time into hour
@@ -353,6 +357,16 @@ const transactionMatcher = (
                 transaction
             );
         }
+    }
+
+    if (highestScore < MINIMUM_MATCH_SCORE) {
+        return {
+            relevantTransaction: null,
+            relevantTransactionId: null,
+            score: highestScore,
+            confidence: 0,
+            reasons: []
+        };
     }
 
     // Generate match reasons

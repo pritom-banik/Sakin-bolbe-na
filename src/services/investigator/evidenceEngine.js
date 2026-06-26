@@ -210,7 +210,9 @@ const isTimeMatched = (
     }
 
     const transactionHour =
-        new Date(transactionTime).getHours();
+        // Keep complaint-vs-transaction time checks timezone-stable
+        // because harness timestamps are ISO-8601, commonly UTC (`Z`).
+        new Date(transactionTime).getUTCHours();
 
     return Math.abs(
         complaintHour - transactionHour
