@@ -4,14 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start":"nodemon index.js"
+    "start": "nodemon index.js"
   },
   "author": "rian_pritom_sakin",
   "license": "ISC",
   "dependencies": {
-    "express": "^5.2.1",
+    "@google/genai": "^2.10.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "nodemon": "^3.1.14"
   }
 }

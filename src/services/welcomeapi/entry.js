@@ -1,4 +1,6 @@
 const investigator = require('../investigator/investigator'); 
+
+const geminiCall = require('../llm/llmcall');
 // Express Handler: /analyze-ticket
 async function welcomeapi(req, res) {
     try {
@@ -39,18 +41,23 @@ async function welcomeapi(req, res) {
         const history = Array.isArray(transaction_history) ? transaction_history : [];
 
         // --- VALIDATION PASSED ---
-        const investigationResult = await investigator.investigate({
-            ticket_id,
-            complaint,
-            language,
-            channel,
-            user_type,
-            campaign_context,
-            transaction_history: history,
-            metadata
-        });
+        // const investigationResult = await investigator.investigate({
+        //     ticket_id,
+        //     complaint,
+        //     language,
+        //     channel,
+        //     user_type,
+        //     campaign_context,
+        //     transaction_history: history,
+        //     metadata
+        // });
 
-        return res.status(200).json(investigationResult);
+        //return res.status(200).json(investigationResult);
+
+        const result = await geminiCall.callGeminiInvestigator(req.body);
+        
+        // Send successful Gemini outcome
+        return res.status(200).json(result);
 
     } catch (error) {
         console.error("Internal Log Error:", error.message); 
